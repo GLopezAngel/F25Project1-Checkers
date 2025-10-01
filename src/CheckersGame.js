@@ -152,5 +152,16 @@ export class CheckersGame {
 
     
     }
+
+    /** 
+     * resets the game to initial state
+     */
+    resetGame() {
+        this.board = this.initializeBoard();
+        this.currentPlayer = 'red';
+        this.selectedPiece = null;
+        this.validMoves = [];
+        this.mustCapture = false;
+    }
  
 }
