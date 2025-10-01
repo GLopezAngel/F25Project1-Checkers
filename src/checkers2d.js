@@ -70,7 +70,7 @@ window.addEventListener('load', () => {
 
     // Reset the game
     document.getElementById('resetButton').addEventListener('click', () => {
-        game.reset();
+        game.resetGame();
         render();
     });
 
