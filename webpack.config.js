@@ -4,8 +4,8 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
     entry: {
-        checkers2d: './src/checkers2d.js',
-        checkers3d: './src/checkers3d.js',
+        checkers2d: './src/Controller/checkers2d.js',
+        checkers3d: './src/Controller/checkers3d.js',
     },
     output: {
         filename: '[name].js',
@@ -29,11 +29,11 @@ module.exports = {
             filename: 'index.html',
         }),
         new HtmlWebpackPlugin({
-            template: './src/checkers2d.html',
+            template: './src/View/checkers2d.html',
             filename: 'checkers2d.html',
         }),
         new HtmlWebpackPlugin({
-            template: './src/checkers3d.html',
+            template: './src/View/checkers3d.html',
             filename: 'checkers3d.html',
         }),
     ],

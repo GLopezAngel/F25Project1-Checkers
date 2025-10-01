@@ -5,7 +5,7 @@
  * is working correctly.
  */
 
-import { CheckersGame } from './CheckersGame.js';
+import { CheckersGame } from '../Model/CheckersGame.js';
 
 /**
  * Load the game and render the board.
