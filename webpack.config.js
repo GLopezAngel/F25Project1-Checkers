@@ -18,6 +18,16 @@ module.exports = {
                 test: /\.css$/i,
                 use: ['style-loader', 'css-loader'],
             },
+            {
+                test: /\.(png|svg|jpg|jpeg|gif)$/i,
+                type: 'asset/resource',
+                generator: { filename: 'images/[name][ext]', },
+            },
+            {
+                test: /\.(stl)$/i,
+                type: 'asset/resource',
+                generator: { filename: 'models/[name][ext]', },
+            }
         ]
     },
     resolve: {
@@ -27,14 +37,17 @@ module.exports = {
         new HtmlWebpackPlugin({
             template: './src/index.html',
             filename: 'index.html',
+            chunks: [],
         }),
         new HtmlWebpackPlugin({
             template: './src/View/checkers2d.html',
             filename: 'checkers2d.html',
+            chunks: ['checkers2d'],
         }),
         new HtmlWebpackPlugin({
             template: './src/View/checkers3d.html',
             filename: 'checkers3d.html',
+            chunks: ['checkers3d'],
         }),
     ],
     devServer: {
