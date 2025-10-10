@@ -89,6 +89,7 @@ window.addEventListener('load', () => {
         return boardGroup;
     }
 
+<<<<<<< HEAD
     // Place checker pieces in their standard starting configuration
     function createCheckerPieces() {
         const boardSize = 8;
@@ -215,6 +216,8 @@ window.addEventListener('load', () => {
     }
 
   
+=======
+>>>>>>> fcae66a9818e409156add8adb03021da03ebf395
 
     // Main function to set up the scene
     function main() {
@@ -272,9 +275,11 @@ window.addEventListener('load', () => {
 
     
         // Initialize game state
-        // const game = new CheckersGame();
-        // let selectedPiece = null;
-        // let validMoves = [];
+        const game = new CheckersGame();
+        let selectedPiece = null;
+        let validMoves = [];
+
+
 
         // Function to continuously render the scene
         function animate() {
@@ -304,6 +309,7 @@ window.addEventListener('load', () => {
             renderer.setScissor(insetX, insetY, insetWidth, insetHeight);
             renderer.render(scene, topCamera);
         }
+
 
         // Start the animation loop
         animate();
