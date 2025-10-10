@@ -57,10 +57,6 @@ window.addEventListener('load', () => {
         scene.add(table);
 
     
-        // Initialize game state
-        const game = new CheckersGame();
-        let selectedPiece = null;
-        let validMoves = [];
 
         // Function to continuously render the scene
         function animate() {
