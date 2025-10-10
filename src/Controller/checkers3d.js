@@ -4,7 +4,6 @@
 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { CheckersGame } from '../Model/CheckersGame.js';
 
 // The entire game setup is wrapped in the 'load' event listener
 window.addEventListener('load', () => { 
@@ -132,9 +131,9 @@ window.addEventListener('load', () => {
     // Craft a single checker piece with detailed contours and top inlay
     function createDetailedCheckerPiece(material, squareSize) {
         const radius = squareSize * 0.35;
-        const baseHeight = radius * 0.28;
-        const midHeight = radius * 0.3;
-        const rimHeight = radius * 0.14;
+        const baseHeight = radius * 0.26;
+        const midHeight = radius * 0.32;
+        const rimHeight = radius * 0.18;
         const totalHeight = baseHeight + midHeight + rimHeight;
 
         const pieceGroup = new THREE.Group();
@@ -142,46 +141,73 @@ window.addEventListener('load', () => {
         const profile = [
             new THREE.Vector2(0, 0),
             new THREE.Vector2(radius * 0.98, 0),
-            new THREE.Vector2(radius, baseHeight * 0.15),
-            new THREE.Vector2(radius * 0.92, baseHeight * 0.55),
-            new THREE.Vector2(radius * 0.9, baseHeight),
-            new THREE.Vector2(radius * 0.92, baseHeight + midHeight * 0.2),
-            new THREE.Vector2(radius * 0.82, baseHeight + midHeight * 0.9),
-            new THREE.Vector2(radius * 0.78, baseHeight + midHeight),
-            new THREE.Vector2(radius * 0.88, baseHeight + midHeight + rimHeight * 0.2),
-            new THREE.Vector2(radius * 0.85, totalHeight - rimHeight * 0.1),
-            new THREE.Vector2(radius * 0.75, totalHeight),
+            new THREE.Vector2(radius, baseHeight * 0.2),
+            new THREE.Vector2(radius * 0.92, baseHeight * 0.6),
+            new THREE.Vector2(radius * 0.88, baseHeight),
+            new THREE.Vector2(radius * 0.92, baseHeight + midHeight * 0.25),
+            new THREE.Vector2(radius * 0.8, baseHeight + midHeight * 0.85),
+            new THREE.Vector2(radius * 0.76, baseHeight + midHeight),
+            new THREE.Vector2(radius * 0.82, baseHeight + midHeight + rimHeight * 0.25),
+            new THREE.Vector2(radius * 0.75, totalHeight - rimHeight * 0.2),
+            new THREE.Vector2(radius * 0.7, totalHeight - rimHeight * 0.05),
+            new THREE.Vector2(radius * 0.76, totalHeight),
             new THREE.Vector2(0, totalHeight),
         ];
 
-        const bodyGeometry = new THREE.LatheGeometry(profile, 64);
+        const bodyGeometry = new THREE.LatheGeometry(profile, 80);
         bodyGeometry.computeVertexNormals();
         const body = new THREE.Mesh(bodyGeometry, material);
         body.castShadow = true;
         body.receiveShadow = true;
         pieceGroup.add(body);
 
-        const topInsetGeometry = new THREE.CylinderGeometry(radius * 0.6, radius * 0.6, rimHeight * 0.25, 48);
+        const topDiskGeometry = new THREE.CylinderGeometry(radius * 0.62, radius * 0.62, rimHeight * 0.3, 64);
+        const topDisk = new THREE.Mesh(topDiskGeometry, material.clone());
+        topDisk.position.y = totalHeight - rimHeight * 0.4;
+        topDisk.castShadow = true;
+        topDisk.receiveShadow = true;
+        pieceGroup.add(topDisk);
+
+        const topInsetGeometry = new THREE.CylinderGeometry(radius * 0.48, radius * 0.48, rimHeight * 0.18, 64);
         const topInset = new THREE.Mesh(topInsetGeometry, material.clone());
-        topInset.position.y = totalHeight - rimHeight * 0.12;
+        topInset.position.y = totalHeight - rimHeight * 0.65;
         topInset.castShadow = true;
         topInset.receiveShadow = true;
         pieceGroup.add(topInset);
 
-        const topRingGeometry = new THREE.TorusGeometry(radius * 0.68, radius * 0.05, 28, 80);
-        const topRing = new THREE.Mesh(topRingGeometry, material.clone());
-        topRing.rotation.x = Math.PI / 2;
-        topRing.position.y = totalHeight - rimHeight * 0.25;
-        topRing.castShadow = true;
-        topRing.receiveShadow = true;
-        pieceGroup.add(topRing);
+        const innerLipGeometry = new THREE.TorusGeometry(radius * 0.5, radius * 0.035, 24, 72);
+        const innerLip = new THREE.Mesh(innerLipGeometry, material.clone());
+        innerLip.rotation.x = Math.PI / 2;
+        innerLip.position.y = totalHeight - rimHeight * 0.75;
+        innerLip.castShadow = true;
+        innerLip.receiveShadow = true;
+        pieceGroup.add(innerLip);
 
-        const bottomChamferGeometry = new THREE.CylinderGeometry(radius * 0.96, radius, baseHeight * 0.2, 48);
-        const bottomChamfer = new THREE.Mesh(bottomChamferGeometry, material.clone());
-        bottomChamfer.position.y = baseHeight * 0.1;
-        bottomChamfer.castShadow = true;
-        bottomChamfer.receiveShadow = true;
-        pieceGroup.add(bottomChamfer);
+        const ridgeCount = 20;
+        const ridgeRadius = radius * 0.78;
+        const ridgeHeight = rimHeight * 0.38;
+        const ridgeThickness = radius * 0.22;
+        const ridgeDepth = radius * 0.12;
+
+        for (let i = 0; i < ridgeCount; i++) {
+            const angle = (i / ridgeCount) * Math.PI * 2;
+            const ridgeGeometry = new THREE.BoxGeometry(ridgeThickness, ridgeHeight, ridgeDepth);
+            const ridge = new THREE.Mesh(ridgeGeometry, material.clone());
+            const x = Math.cos(angle) * ridgeRadius;
+            const z = Math.sin(angle) * ridgeRadius;
+            ridge.position.set(x, totalHeight - rimHeight * 0.35, z);
+            ridge.rotation.y = -angle;
+            ridge.castShadow = true;
+            ridge.receiveShadow = true;
+            pieceGroup.add(ridge);
+        }
+
+        const bottomLipGeometry = new THREE.CylinderGeometry(radius * 0.97, radius, baseHeight * 0.18, 64);
+        const bottomLip = new THREE.Mesh(bottomLipGeometry, material.clone());
+        bottomLip.position.y = baseHeight * 0.18;
+        bottomLip.castShadow = true;
+        bottomLip.receiveShadow = true;
+        pieceGroup.add(bottomLip);
 
         pieceGroup.userData.height = totalHeight;
 
