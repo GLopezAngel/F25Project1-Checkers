@@ -115,7 +115,7 @@ window.addEventListener('load', () => {
                     const piece = createDetailedCheckerPiece(isTopPlayer ? darkPieceMaterial : lightPieceMaterial, squareSize);
                     const pieceHeight = piece.userData.height;
                     piece.position.x = (col - squareCount / 2) * squareSize + squareSize / 2;
-                    piece.position.y = boardThickness + pieceHeight / 2 + 0.01;
+                    piece.position.y = boardThickness + pieceHeight - 0.2;
                     piece.position.z = (row - squareCount / 2) * squareSize + squareSize / 2;
                     piece.castShadow = true;
                     piece.receiveShadow = true;
@@ -265,5 +265,5 @@ window.addEventListener('load', () => {
     // Call the main function to start the application
     main();
 
-// THIS IS THE CORRECTED CLOSING SYNTAX:
+
 });
