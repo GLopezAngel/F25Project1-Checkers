@@ -4,6 +4,7 @@
 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { CheckersGame } from '../Model/CheckersGame.js';
 
 // The entire game setup is wrapped in the 'load' event listener
 window.addEventListener('load', () => { 
@@ -158,6 +159,8 @@ window.addEventListener('load', () => {
 
         return pieceGroup;
     }
+
+
        
 
   
@@ -218,9 +221,9 @@ window.addEventListener('load', () => {
 
     
         // Initialize game state
-        // const game = new CheckersGame();
-        // let selectedPiece = null;
-        // let validMoves = [];
+        const game = new CheckersGame();
+        let selectedPiece = null;
+        let validMoves = [];
 
         // Function to continuously render the scene
         function animate() {
