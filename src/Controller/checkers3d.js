@@ -89,7 +89,6 @@ window.addEventListener('load', () => {
         return boardGroup;
     }
 
-<<<<<<< HEAD
     // Place checker pieces in their standard starting configuration
     function createCheckerPieces() {
         const boardSize = 8;
@@ -172,16 +171,12 @@ window.addEventListener('load', () => {
         const topInsetGeometry = new THREE.CylinderGeometry(radius * 0.48, radius * 0.48, rimHeight * 0.18, 64);
         const topInset = new THREE.Mesh(topInsetGeometry, material.clone());
         topInset.position.y = totalHeight - rimHeight * 0.65;
-        topInset.castShadow = true;
-        topInset.receiveShadow = true;
         pieceGroup.add(topInset);
 
         const innerLipGeometry = new THREE.TorusGeometry(radius * 0.5, radius * 0.035, 24, 72);
         const innerLip = new THREE.Mesh(innerLipGeometry, material.clone());
         innerLip.rotation.x = Math.PI / 2;
         innerLip.position.y = totalHeight - rimHeight * 0.75;
-        innerLip.castShadow = true;
-        innerLip.receiveShadow = true;
         pieceGroup.add(innerLip);
 
         const ridgeCount = 20;
@@ -216,8 +211,6 @@ window.addEventListener('load', () => {
     }
 
   
-=======
->>>>>>> fcae66a9818e409156add8adb03021da03ebf395
 
     // Main function to set up the scene
     function main() {
@@ -275,11 +268,9 @@ window.addEventListener('load', () => {
 
     
         // Initialize game state
-        const game = new CheckersGame();
-        let selectedPiece = null;
-        let validMoves = [];
-
-
+        // const game = new CheckersGame();
+        // let selectedPiece = null;
+        // let validMoves = [];
 
         // Function to continuously render the scene
         function animate() {
@@ -309,7 +300,6 @@ window.addEventListener('load', () => {
             renderer.setScissor(insetX, insetY, insetWidth, insetHeight);
             renderer.render(scene, topCamera);
         }
-
 
         // Start the animation loop
         animate();
