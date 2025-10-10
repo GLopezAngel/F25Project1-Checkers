@@ -90,6 +90,8 @@ window.addEventListener('load', () => {
         return boardGroup;
     }
 
+    
+
   
 
     // Main function to set up the scene
@@ -136,6 +138,8 @@ window.addEventListener('load', () => {
         let selectedPiece = null;
         let validMoves = [];
 
+
+
         // Function to continuously render the scene
         function animate() {
             requestAnimationFrame(animate);
@@ -144,6 +148,7 @@ window.addEventListener('load', () => {
 
             renderer.render(scene, camera);
         }
+
 
         // Start the animation loop
         animate();
