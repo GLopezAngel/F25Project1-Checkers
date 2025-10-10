@@ -90,9 +90,6 @@ window.addEventListener('load', () => {
         return boardGroup;
     }
 
-    
-
-  
 
     // Main function to set up the scene
     function main() {
@@ -103,9 +100,23 @@ window.addEventListener('load', () => {
         camera.position.set(5, 10, 10);
         camera.lookAt(0, 0, 0);
 
+        const topCameraSize = 6;
+        const topCamera = new THREE.OrthographicCamera(
+            -topCameraSize,
+            topCameraSize,
+            topCameraSize,
+            -topCameraSize,
+            0.1,
+            50
+        );
+        topCamera.position.set(0, 20, 0);
+        topCamera.up.set(0, 0, -1);
+        topCamera.lookAt(0, 0, 0);
+
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.shadowMap.enabled = true;
+        renderer.autoClear = false;
         document.body.appendChild(renderer.domElement);
 
         // Add lights
@@ -131,6 +142,8 @@ window.addEventListener('load', () => {
         scene.add(table);
         const board = createCheckersBoard();
         scene.add(board);
+        const pieces = createCheckerPieces();
+        board.add(pieces);
 
     
         // Initialize game state
@@ -146,7 +159,27 @@ window.addEventListener('load', () => {
 
             controls.update(); 
 
+            renderer.clear();
+            renderer.setScissorTest(true);
+
+            const canvas = renderer.domElement;
+            const mainWidth = canvas.clientWidth;
+            const mainHeight = canvas.clientHeight;
+
+            renderer.setViewport(0, 0, mainWidth, mainHeight);
+            renderer.setScissor(0, 0, mainWidth, mainHeight);
             renderer.render(scene, camera);
+
+            const insetScale = 0.2;
+            const insetWidth = mainWidth * insetScale;
+            const insetHeight = insetWidth;
+            const insetMargin = 20;
+            const insetX = mainWidth - insetWidth - insetMargin;
+            const insetY = mainHeight - insetHeight - insetMargin;
+
+            renderer.setViewport(insetX, insetY, insetWidth, insetHeight);
+            renderer.setScissor(insetX, insetY, insetWidth, insetHeight);
+            renderer.render(scene, topCamera);
         }
 
 
