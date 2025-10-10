@@ -10,12 +10,84 @@ import { CheckersGame } from '../Model/CheckersGame.js';
 window.addEventListener('load', () => { 
     // make a table
     function createTable() {
-        const tableGeometry = new THREE.BoxGeometry(10, 1, 10);
+        const topWidth = 10;
+        const topDepth = 10;
+        const topThickness = 1;
+        const legThickness = 0.6;
+        const legHeight = 4;
+
+        const tableGroup = new THREE.Group();
+
         const tableMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
-        const table = new THREE.Mesh(tableGeometry, tableMaterial);
-        table.position.y = -0.5;
-        table.receiveShadow = true;
-        return table;
+
+        const tableTopGeometry = new THREE.BoxGeometry(topWidth, topThickness, topDepth);
+        const tableTop = new THREE.Mesh(tableTopGeometry, tableMaterial);
+        tableTop.position.y = -topThickness / 2;
+        tableTop.castShadow = true;
+        tableTop.receiveShadow = true;
+        tableGroup.add(tableTop);
+
+        const legGeometry = new THREE.BoxGeometry(legThickness, legHeight, legThickness);
+        const legOffsetX = (topWidth / 2) - legThickness;
+        const legOffsetZ = (topDepth / 2) - legThickness;
+        const legY = -(topThickness + legHeight) / 2 - (topThickness / 2);
+
+        const legPositions = [
+            [ legOffsetX, legY,  legOffsetZ],
+            [-legOffsetX, legY,  legOffsetZ],
+            [ legOffsetX, legY, -legOffsetZ],
+            [-legOffsetX, legY, -legOffsetZ],
+        ];
+
+        for (const [x, y, z] of legPositions) {
+            const leg = new THREE.Mesh(legGeometry, tableMaterial);
+            leg.position.set(x, y, z);
+            leg.castShadow = true;
+            leg.receiveShadow = true;
+            tableGroup.add(leg);
+        }
+
+        return tableGroup;
+    }
+
+    // Build an 8x8 checkers board and place it on top of the table
+    function createCheckersBoard() {
+        const boardSize = 8;
+        const squareCount = 8;
+        const squareSize = boardSize / squareCount;
+        const boardThickness = 0.15;
+
+        const boardGroup = new THREE.Group();
+
+        const boardBaseGeometry = new THREE.BoxGeometry(boardSize, boardThickness, boardSize);
+        const boardBaseMaterial = new THREE.MeshStandardMaterial({ color: 0xD2B48C });
+        const boardBase = new THREE.Mesh(boardBaseGeometry, boardBaseMaterial);
+        boardBase.position.y = boardThickness / 2;
+        boardBase.castShadow = true;
+        boardBase.receiveShadow = true;
+        boardGroup.add(boardBase);
+
+        const lightSquareMaterial = new THREE.MeshStandardMaterial({ color: 0xF5DEB3 });
+        const darkSquareMaterial = new THREE.MeshStandardMaterial({ color: 0x2F4F4F });
+        const squareGeometry = new THREE.PlaneGeometry(squareSize, squareSize);
+
+        for (let row = 0; row < squareCount; row++) {
+            for (let col = 0; col < squareCount; col++) {
+                const squareMaterial = (row + col) % 2 === 0 ? lightSquareMaterial : darkSquareMaterial;
+                const square = new THREE.Mesh(squareGeometry, squareMaterial);
+                square.rotation.x = -Math.PI / 2;
+                square.position.x = (col - squareCount / 2) * squareSize + squareSize / 2;
+                square.position.y = boardThickness + 0.001;
+                square.position.z = (row - squareCount / 2) * squareSize + squareSize / 2;
+                square.receiveShadow = true;
+                square.castShadow = false;
+                boardGroup.add(square);
+            }
+        }
+
+        boardGroup.position.y = 0;
+
+        return boardGroup;
     }
 
   
@@ -55,12 +127,14 @@ window.addEventListener('load', () => {
         // Create table and board
         const table = createTable();
         scene.add(table);
+        const board = createCheckersBoard();
+        scene.add(board);
 
     
         // Initialize game state
-        const game = new CheckersGame();
-        let selectedPiece = null;
-        let validMoves = [];
+        // const game = new CheckersGame();
+        // let selectedPiece = null;
+        // let validMoves = [];
 
         // Function to continuously render the scene
         function animate() {
