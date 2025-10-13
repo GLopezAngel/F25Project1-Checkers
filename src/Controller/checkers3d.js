@@ -247,6 +247,10 @@ function createFloor() {
         }
         return markerGroup;
     }
+  // Reset the game
+  document.getElementById('resetButton').addEventListener('click', () => {
+        window.location.reload();
+});
 
   // Main function to set up the scene
 function main() {
