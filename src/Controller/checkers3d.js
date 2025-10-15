@@ -252,15 +252,23 @@ function createFloor() {
         window.location.reload();
 });
 
-  // Main function to set up the scene
+// Main function to set up the scene
 function main() {
     // Set up scene, camera, and renderer
     const scene = new THREE.Scene();
-    // --- CHANGE START ---
-    scene.background = new THREE.Color(0x1a1a1a); // Darker background
-    // --- CHANGE END ---
+    scene.background = new THREE.Color(0x1a1a1a);
     const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
-    camera.position.set(5, 10, 10);
+    
+    
+    // Define camera positions for each player
+    const playerRedPosition = new THREE.Vector3(0, 8, 8); // Player at the "bottom"
+    const playerBlackPosition = new THREE.Vector3(0, 8, -8); // Player at the "top"
+
+    // Set the initial camera position for the starting player (assuming red starts)
+    camera.position.copy(playerRedPosition);
+    let targetCameraPosition = new THREE.Vector3().copy(camera.position);
+   
+
     camera.lookAt(0, 0, 0);
 
     const topCameraSize = 6;
@@ -279,24 +287,24 @@ function main() {
 
 
     // Add lights
-    // Dim ambient light for subtle fill
     const ambientLight = new THREE.AmbientLight(0xFFFFFF, .5);
     scene.add(ambientLight);
 
-    // Add a spotlight to focus on the board
     const spotLight = new THREE.SpotLight(0xffffff, 125, 25, Math.PI / 2, 0.5, 2);
     spotLight.position.set(0, 8, 0);
-    spotLight.target.position.set(0, 0, 0); // Point it at the center of the board
+    spotLight.target.position.set(0, 0, 0);
     spotLight.castShadow = true;
-    spotLight.shadow.mapSize.width = 2048; // Higher res shadow
+    spotLight.shadow.mapSize.width = 2048;
     spotLight.shadow.mapSize.height = 2048;
     scene.add(spotLight);
-    scene.add(spotLight.target); // Add the target to the scene
+    scene.add(spotLight.target);
   
 
     // Add controls
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.target.set(0, 0, 0);
+    controls.enablePan = false; // Optional: Disabling pan can provide a better experience
+    controls.maxPolarAngle = Math.PI / 2 - 0.1; // Optional: prevent camera from going below board
     controls.update();
 
     // Add the floor
@@ -311,6 +319,9 @@ function main() {
 
     // Initialize game and 3D object references
     const game = new CheckersGame();
+
+    let previousPlayer = game.currentPlayer; // Track player changes
+   
     const pieceMeshes = [];
     const markerMeshes = [];
     const raycaster = new THREE.Raycaster();
@@ -321,8 +332,18 @@ function main() {
     board.add(pieces);
     const markers = createMoveMarkers(markerMeshes);
     board.add(markers);
+    
 
-    // Function to synchronize the 3D view with the game model state
+    // Function to switch the camera's target position
+    function switchCameraToCurrentPlayer() {
+        if (game.currentPlayer === 'red') {
+            targetCameraPosition.copy(playerRedPosition);
+        } else {
+            targetCameraPosition.copy(playerBlackPosition);
+        }
+    }
+ 
+
     function updateBoardFromModel() {
         const darkPieceMaterial = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.5, metalness: 0.5 });
         const lightPieceMaterial = new THREE.MeshStandardMaterial({ color: 0xB22222, roughness: 0.5, metalness: 0.5 });
@@ -392,6 +413,15 @@ function main() {
                 const isMoveSuccessful = game.makeMove(row, col);
                 if (isMoveSuccessful) {
                     updateBoardFromModel();
+                    
+                    // --- CHANGE START ---
+                    // Check if the player has changed and trigger the camera switch
+                    if (previousPlayer !== game.currentPlayer) {
+                        switchCameraToCurrentPlayer();
+                        previousPlayer = game.currentPlayer;
+                    }
+                    // --- CHANGE END ---
+
                     if (game.selectedPiece) {
                        showValidMoves();
                     } else {
@@ -414,6 +444,13 @@ function main() {
 
     function animate() {
         requestAnimationFrame(animate);
+
+        
+        // Smoothly move the camera towards its target position
+        // The second argument (alpha) controls the speed; smaller is slower.
+        camera.position.lerp(targetCameraPosition, 0.05);
+     
+
         controls.update(); 
         renderer.clear();
         renderer.setScissorTest(true);
