@@ -4,8 +4,10 @@
 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader.js';
 import { CheckersGame } from '../Model/CheckersGame.js';
 import woodTextureUrl from '../../assets/Red_Oak_1200x1200_2cb4d3b7-b287-43df-a575-fb629a6914cd_1200x.jpeg';
+import crownUrl from '../../assets/crown.svg'; // Import the SVG file URL
 
 window.addEventListener('load', () => {
     const textureLoader = new THREE.TextureLoader();
@@ -154,7 +156,7 @@ window.addEventListener('load', () => {
         black: new THREE.MeshStandardMaterial({ color: 0x666666, roughness: 0.5, metalness: 0.5 })
     };
 
-    function createCheckerPieces(gameBoard, pieceMeshes) {
+    function createCheckerPieces(gameBoard, pieceMeshes, crownShapes) {
         const boardSize = 8;
         const squareCount = 8;
         const squareSize = boardSize / squareCount;
@@ -167,7 +169,7 @@ window.addEventListener('load', () => {
                 if ((row + col) % 2 === 1) {
                     const logicalPiece = gameBoard[row][col];
                     const material = logicalPiece && logicalPiece.color === 'red' ? basePieceMaterials.red : basePieceMaterials.black;
-                    const piece = createDetailedCheckerPiece(material, squareSize);
+                    const piece = createDetailedCheckerPiece(material, squareSize, crownShapes);
                     const pieceHeight = piece.userData.height;
                     piece.position.x = (col - squareCount / 2) * squareSize + squareSize / 2;
                     piece.position.y = boardThickness + pieceHeight - 0.2;
@@ -196,76 +198,42 @@ window.addEventListener('load', () => {
             return pieceGeometryCache.get(squareSize);
         }
     
-        // Core dimensions for a classic "puck" shape
         const pieceRadius = squareSize * 0.45;
-        const pieceHeight = squareSize * 0.25; // Much shorter and wider now
+        const pieceHeight = squareSize * 0.25;
     
-        // 1. The main body of the checker (CylinderGeometry)
         const mainCylinder = new THREE.CylinderGeometry(pieceRadius, pieceRadius, pieceHeight, 64);
-    
-        // 2. A torus to create smooth, beveled edges (TorusGeometry)
-        const edgeBevelTorus = new THREE.TorusGeometry(pieceRadius, squareSize * 0.02, 16, 64);
-    
-        // 3. A box for the ridges on the side (BoxGeometry)
         const ridgeBox = new THREE.BoxGeometry(squareSize * 0.04, pieceHeight * 1.2, squareSize * 0.03);
-        const ridgeCount = 24; // More ridges for a finer look
+        const ridgeCount = 24;
         const ridgeRadius = pieceRadius - squareSize * 0.01;
-    
-        // --- King's Crown Geometries (Unchanged from before) ---
-        const kingCrownRadius = squareSize * 0.25;
-        const crownHeight = squareSize * 0.06;
-        const kingBaseCylinder = new THREE.CylinderGeometry(kingCrownRadius, kingCrownRadius * 0.8, crownHeight * 0.6, 32);
-        const kingCrownTorus = new THREE.TorusGeometry(kingCrownRadius * 0.7, squareSize * 0.015, 16, 64);
-        const kingSpike = new THREE.CylinderGeometry(squareSize * 0.01, squareSize * 0.03, crownHeight * 0.8, 8);
-        const kingSpikeCount = 8;
-        const kingSpikeRadius = kingCrownRadius * 0.8;
     
         const data = {
             pieceHeight,
             mainCylinder,
-            edgeBevelTorus,
             ridgeBox,
             ridgeCount,
-            ridgeRadius,
-            // King data
-            crownHeight,
-            kingBaseCylinder,
-            kingCrownTorus,
-            kingSpike,
-            kingSpikeCount,
-            kingSpikeRadius
+            ridgeRadius
         };
     
         pieceGeometryCache.set(squareSize, data);
         return data;
     }
     
-    /**
-     * NEW: Builds the checker piece using the classic "puck" shape.
-     */
-    function createDetailedCheckerPiece(material, squareSize) {
+    function createDetailedCheckerPiece(material, squareSize, crownShapes) {
         const pieceGroup = new THREE.Group();
         const geometryData = getPieceGeometryData(squareSize);
         const {
             pieceHeight,
             mainCylinder,
-            edgeBevelTorus,
             ridgeBox,
             ridgeCount,
-            ridgeRadius,
-            crownHeight,
-            kingBaseCylinder,
-            kingCrownTorus,
-            kingSpike,
-            kingSpikeCount,
-            kingSpikeRadius
+            ridgeRadius
         } = geometryData;
-    
+
         // The main body of the piece
         const mainPiece = new THREE.Mesh(mainCylinder, material);
-        mainPiece.position.y = pieceHeight / 2; // Center it vertically
+        mainPiece.position.y = pieceHeight / 2;
         pieceGroup.add(mainPiece);
-    
+
         // Add ridges around the side
         for (let i = 0; i < ridgeCount; i++) {
             const angle = (i / ridgeCount) * Math.PI * 2;
@@ -278,44 +246,54 @@ window.addEventListener('load', () => {
             ridge.rotation.y = angle;
             pieceGroup.add(ridge);
         }
-    
-        // Add a single decorative Torus ring in a slight inset on the top surface
+
+        // Add a single decorative Torus ring on the top surface
         const topRing = new THREE.Mesh(
             new THREE.TorusGeometry(ridgeRadius * 0.7, squareSize * 0.015, 16, 64),
             material
         );
         topRing.rotation.x = Math.PI / 2;
-        topRing.position.y = pieceHeight; // Sit it on the top face
+        topRing.position.y = pieceHeight;
         pieceGroup.add(topRing);
-    
-        // --- King's Crown Group (Same as before, just re-positioned) ---
+
+        // --- King's Crown from SVG ---
         const crownGroup = new THREE.Group();
-        const crownMaterial = new THREE.MeshStandardMaterial({ color: 0xffd700, emissive: 0x333300, roughness: 0.3, metalness: 0.7 });
-        const kingBase = new THREE.Mesh(kingBaseCylinder, crownMaterial);
-        kingBase.position.y = crownHeight * 0.3;
-        crownGroup.add(kingBase);
-        const kingRing = new THREE.Mesh(kingCrownTorus, crownMaterial);
-        kingRing.rotation.x = Math.PI / 2;
-        kingRing.position.y = crownHeight * 0.7;
-        crownGroup.add(kingRing);
-        for (let i = 0; i < kingSpikeCount; i++) {
-            const angle = (i / kingSpikeCount) * Math.PI * 2;
-            const spike = new THREE.Mesh(kingSpike, crownMaterial);
-            spike.position.set(Math.cos(angle) * kingSpikeRadius, crownHeight * 0.8, Math.sin(angle) * kingSpikeRadius);
-            crownGroup.add(spike);
-        }
-        
-        // Position the whole crown on top of the checker piece
-        crownGroup.position.y = pieceHeight;
+        const crownMaterial = new THREE.MeshStandardMaterial({
+            color: 0xffd700, // Gold color
+            emissive: 0x222200,
+            roughness: 0.3,
+            metalness: 0.8
+        });
+
+        const extrudeSettings = {
+            depth: squareSize,
+            bevelEnabled: true,
+            bevelSize: squareSize * 0.0005,
+            bevelThickness: squareSize * 0.005,
+            bevelSegments: 2
+        };
+
+        crownShapes.forEach(shape => {
+            const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+            geometry.center();
+            const mesh = new THREE.Mesh(geometry, crownMaterial);
+            mesh.castShadow = true;
+            crownGroup.add(mesh);
+        });
+
+        const crownScale = squareSize * 0.004;
+        crownGroup.scale.set(crownScale, crownScale, crownScale);
+        crownGroup.rotation.x = -Math.PI / 2;
+        crownGroup.position.y = pieceHeight + 0.01;
         crownGroup.visible = false;
         pieceGroup.add(crownGroup);
         pieceGroup.userData.crown = crownGroup;
-    
-        // Set the height for positioning on the board
+
         pieceGroup.userData.height = pieceHeight;
         return pieceGroup;
     }
-    function createMoveMarkers(markerMeshes) {
+
+    function createMoveMarkers(markerMeshes, crownShapes) {
         const boardSize = 8;
         const squareCount = 8;
         const squareSize = boardSize / squareCount;
@@ -333,7 +311,7 @@ window.addEventListener('load', () => {
             markerMeshes[row] = [];
             for (let col = 0; col < squareCount; col++) {
                 if ((row + col) % 2 === 1) {
-                    const marker = createDetailedCheckerPiece(markerMaterial, squareSize);
+                    const marker = createDetailedCheckerPiece(markerMaterial, squareSize, crownShapes);
                     const pieceHeight = marker.userData.height;
                     marker.position.x = (col - squareCount / 2) * squareSize + squareSize / 2;
                     marker.position.y = boardThickness + pieceHeight - 0.2;
@@ -417,11 +395,26 @@ window.addEventListener('load', () => {
         const markerMeshes = [];
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
-        const pieces = createCheckerPieces(game.board, pieceMeshes);
-        board.add(pieces);
-        const markers = createMoveMarkers(markerMeshes);
-        board.add(markers);
-        refreshPieceMaterials();
+
+        // --- Load Crown SVG Asynchronously ---
+        const loader = new SVGLoader();
+        loader.load(
+            crownUrl,
+            function (data) {
+                const crownShapes = data.paths.flatMap(path => path.toShapes(true));
+                const pieces = createCheckerPieces(game.board, pieceMeshes, crownShapes);
+                board.add(pieces);
+                const markers = createMoveMarkers(markerMeshes, crownShapes);
+                board.add(markers);
+                refreshPieceMaterials();
+            },
+            function (xhr) {
+                console.log(`Loading crown: ${(xhr.loaded / xhr.total * 100)}% loaded`);
+            },
+            function (error) {
+                console.error('An error happened while loading the crown SVG.', error);
+            }
+        );
 
         function switchCameraToCurrentPlayer() {
             if (game.currentPlayer === 'red') {
@@ -452,9 +445,9 @@ window.addEventListener('load', () => {
                                 : basePieceMaterials.black;
 
                     mesh.traverse(child => {
-                        if (child.isMesh && child !== mesh.userData.crown) {
-                            child.material = material;
-                        }
+                       if (child.isMesh && child.parent !== mesh.userData.crown) {
+                    child.material = material;
+                }
                     });
                 }
             }
@@ -470,6 +463,13 @@ window.addEventListener('load', () => {
                     if (pieceData) {
                         mesh.visible = true;
                         mesh.userData.crown.visible = pieceData.isKing;
+
+                            // Set crown rotation based on the piece's current color.
+                            if (pieceData.color === 'red') {
+                                mesh.userData.crown.rotation.z = Math.PI; // Face the red side
+                            } else {
+                                mesh.userData.crown.rotation.z = 0; // Face the black side (default)
+                            }
                     } else {
                         mesh.visible = false;
                     }
@@ -531,10 +531,14 @@ window.addEventListener('load', () => {
                 raycaster.setFromCamera(mouse, camera);
             }
 
-            const intersects = raycaster.intersectObjects(
-                [...pieces.children, ...board.userData.squares, ...markers.children],
-                true
-            );
+            const allClickableObjects = [];
+            scene.traverse(obj => {
+                if (obj.userData.type === 'piece' || obj.userData.type === 'square') {
+                    allClickableObjects.push(obj);
+                }
+            });
+
+            const intersects = raycaster.intersectObjects(allClickableObjects, true);
 
             if (intersects.length === 0) return;
 
@@ -585,7 +589,6 @@ window.addEventListener('load', () => {
             if (isCameraAnimating) {
                 camera.position.lerp(targetCameraPosition, 0.05);
         
-                // Stop animating when the camera is very close to the target
                 if (camera.position.distanceTo(targetCameraPosition) < 0.01) {
                     isCameraAnimating = false;
                 }
