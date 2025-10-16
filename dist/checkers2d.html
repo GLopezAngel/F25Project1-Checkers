@@ -1,0 +1,105 @@
+<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Checkers 2D</title><style>body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .game-container {
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(8, 60px);
+            grid-template-rows: repeat(8, 60px);
+            border: 3px solid #333;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .cell {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .cell.light {
+            background-color: #f0d9b5;
+        }
+
+        .cell.dark {
+            background-color: #b58863;
+        }
+
+        .cell.valid-move {
+            background-color: #90EE90 !important;
+            cursor: pointer;
+        }
+
+        .cell.selected {
+            background-color: #FFD700 !important;
+        }
+
+        .piece {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: 2px solid #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 20px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .piece:hover {
+            transform: scale(1.1);
+        }
+
+        .piece.red {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .piece.black {
+            background-color: #343a40;
+            color: white;
+        }
+
+        .piece.king::after {
+            content: "♔";
+            position: absolute;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+            background-color: #6c757d;
+            color: white;
+            margin: 20px;
+        }
+
+        button:hover {
+            background-color: #5a6268;
+        }</style><script defer="defer" src="checkers2d.js"></script></head><body><h1>Checkers 2D</h1><div class="game-container"><div class="board" id="gameBoard"></div></div><button class="reset-btn" id="resetButton">Reset Game</button></body></html>
