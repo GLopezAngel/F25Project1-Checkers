@@ -195,194 +195,126 @@ window.addEventListener('load', () => {
         if (pieceGeometryCache.has(squareSize)) {
             return pieceGeometryCache.get(squareSize);
         }
-
-        const baseHeight = squareSize * 0.05;
-        const midDepth = squareSize * 0.06;
-        const topHeight = squareSize * 0.03;
-        const innerDishDepth = squareSize * 0.04;
-
-        const baseGeometry = new THREE.CylinderGeometry(squareSize * 0.48, squareSize * 0.52, baseHeight, 64);
-        const bottomRingGeometry = new THREE.TorusGeometry(squareSize * 0.45, squareSize * 0.02, 32, 96);
-
-        const concentricCount = 3;
-        const concentricSpecs = [];
-        for (let i = 0; i < concentricCount; i++) {
-            const radiusOuter = squareSize * (0.34 - i * 0.05);
-            const radiusInner = radiusOuter - squareSize * 0.03;
-            const thickness = squareSize * 0.012;
-
-            const ringGeometry = new THREE.RingGeometry(radiusInner, radiusOuter, 48);
-            const ringShape = new THREE.Shape();
-            ringShape.absarc(0, 0, radiusOuter, 0, Math.PI * 2, false);
-            const ringHole = new THREE.Path();
-            ringHole.absarc(0, 0, radiusInner, 0, Math.PI * 2, true);
-            ringShape.holes.push(ringHole);
-            const extrudeGeometry = new THREE.ExtrudeGeometry(ringShape, { depth: thickness, bevelEnabled: false });
-
-            concentricSpecs.push({
-                ringGeometry,
-                extrudedGeometry: extrudeGeometry,
-                thickness
-            });
-        }
-
-        const ridgeGeometry = new THREE.BoxGeometry(squareSize * 0.015, baseHeight + midDepth * 0.5, squareSize * 0.08);
-        const topRidgeGeometry = new THREE.BoxGeometry(squareSize * 0.04, topHeight + squareSize * 0.01, squareSize * 0.015);
-
-        const midBowlShape = new THREE.Shape();
-        midBowlShape.absarc(0, 0, squareSize * 0.38, 0, Math.PI * 2, false);
-        const midBowlHole = new THREE.Path();
-        midBowlHole.absarc(0, 0, squareSize * 0.16, 0, Math.PI * 2, true);
-        midBowlShape.holes.push(midBowlHole);
-        const midBowlGeometry = new THREE.ExtrudeGeometry(midBowlShape, {
-            depth: midDepth,
-            bevelEnabled: true,
-            bevelSegments: 2,
-            bevelSize: squareSize * 0.01,
-            bevelThickness: squareSize * 0.012
-        });
-        midBowlGeometry.center();
-
-        const innerDishShape = new THREE.Shape();
-        innerDishShape.absarc(0, 0, squareSize * 0.18, 0, Math.PI * 2, false);
-        const innerDishGeometry = new THREE.ExtrudeGeometry(innerDishShape, {
-            depth: innerDishDepth,
-            bevelEnabled: true,
-            bevelSegments: 3,
-            bevelSize: squareSize * 0.01,
-            bevelThickness: squareSize * 0.01
-        });
-        innerDishGeometry.center();
-
-        const topPlateGeometry = new THREE.CylinderGeometry(squareSize * 0.3, squareSize * 0.3, topHeight, 48);
-        const topButtonGeometry = new THREE.CylinderGeometry(squareSize * 0.12, squareSize * 0.18, squareSize * 0.035, 32);
-        const crownGeometry = new THREE.TorusGeometry(squareSize * 0.2, squareSize * 0.03, 8, 32);
-
+    
+        // Core dimensions for a classic "puck" shape
+        const pieceRadius = squareSize * 0.45;
+        const pieceHeight = squareSize * 0.25; // Much shorter and wider now
+    
+        // 1. The main body of the checker (CylinderGeometry)
+        const mainCylinder = new THREE.CylinderGeometry(pieceRadius, pieceRadius, pieceHeight, 64);
+    
+        // 2. A torus to create smooth, beveled edges (TorusGeometry)
+        const edgeBevelTorus = new THREE.TorusGeometry(pieceRadius, squareSize * 0.02, 16, 64);
+    
+        // 3. A box for the ridges on the side (BoxGeometry)
+        const ridgeBox = new THREE.BoxGeometry(squareSize * 0.04, pieceHeight * 1.2, squareSize * 0.03);
+        const ridgeCount = 24; // More ridges for a finer look
+        const ridgeRadius = pieceRadius - squareSize * 0.01;
+    
+        // --- King's Crown Geometries (Unchanged from before) ---
+        const kingCrownRadius = squareSize * 0.25;
+        const crownHeight = squareSize * 0.06;
+        const kingBaseCylinder = new THREE.CylinderGeometry(kingCrownRadius, kingCrownRadius * 0.8, crownHeight * 0.6, 32);
+        const kingCrownTorus = new THREE.TorusGeometry(kingCrownRadius * 0.7, squareSize * 0.015, 16, 64);
+        const kingSpike = new THREE.CylinderGeometry(squareSize * 0.01, squareSize * 0.03, crownHeight * 0.8, 8);
+        const kingSpikeCount = 8;
+        const kingSpikeRadius = kingCrownRadius * 0.8;
+    
         const data = {
-            baseHeight,
-            midDepth,
-            topHeight,
-            innerDishDepth,
-            baseGeometry,
-            bottomRingGeometry,
-            concentricSpecs,
-            ridgeGeometry,
-            ridgeCount: 16,
-            ridgeRadius: squareSize * 0.36,
-            topRidgeGeometry,
-            topRidgeCount: 12,
-            topRidgeRadius: squareSize * 0.25,
-            midBowlGeometry,
-            innerDishGeometry,
-            topPlateGeometry,
-            topButtonGeometry,
-            crownGeometry
+            pieceHeight,
+            mainCylinder,
+            edgeBevelTorus,
+            ridgeBox,
+            ridgeCount,
+            ridgeRadius,
+            // King data
+            crownHeight,
+            kingBaseCylinder,
+            kingCrownTorus,
+            kingSpike,
+            kingSpikeCount,
+            kingSpikeRadius
         };
-
+    
         pieceGeometryCache.set(squareSize, data);
         return data;
     }
-
+    
+    /**
+     * NEW: Builds the checker piece using the classic "puck" shape.
+     */
     function createDetailedCheckerPiece(material, squareSize) {
         const pieceGroup = new THREE.Group();
-
         const geometryData = getPieceGeometryData(squareSize);
         const {
-            baseHeight,
-            midDepth,
-            topHeight,
-            innerDishDepth,
-            baseGeometry,
-            bottomRingGeometry,
-            concentricSpecs,
-            ridgeGeometry,
+            pieceHeight,
+            mainCylinder,
+            edgeBevelTorus,
+            ridgeBox,
             ridgeCount,
             ridgeRadius,
-            topRidgeGeometry,
-            topRidgeCount,
-            topRidgeRadius,
-            midBowlGeometry,
-            innerDishGeometry,
-            topPlateGeometry,
-            topButtonGeometry,
-            crownGeometry
+            crownHeight,
+            kingBaseCylinder,
+            kingCrownTorus,
+            kingSpike,
+            kingSpikeCount,
+            kingSpikeRadius
         } = geometryData;
-
-        const base = new THREE.Mesh(baseGeometry, material);
-        base.position.y = baseHeight / 2;
-        pieceGroup.add(base);
-
-        const bottomRing = new THREE.Mesh(bottomRingGeometry, material);
-        bottomRing.rotation.x = Math.PI / 2;
-        bottomRing.position.y = baseHeight * 0.4;
-        pieceGroup.add(bottomRing);
-
-        concentricSpecs.forEach(({ ringGeometry, extrudedGeometry, thickness }) => {
-            const ring = new THREE.Mesh(ringGeometry, material);
-            ring.rotation.x = -Math.PI / 2;
-            ring.position.y = thickness / 2;
-            pieceGroup.add(ring);
-
-            const extruded = new THREE.Mesh(extrudedGeometry, material);
-            extruded.rotation.x = -Math.PI / 2;
-            extruded.position.y = baseHeight / 2;
-            pieceGroup.add(extruded);
-        });
-
+    
+        // The main body of the piece
+        const mainPiece = new THREE.Mesh(mainCylinder, material);
+        mainPiece.position.y = pieceHeight / 2; // Center it vertically
+        pieceGroup.add(mainPiece);
+    
+        // Add ridges around the side
         for (let i = 0; i < ridgeCount; i++) {
             const angle = (i / ridgeCount) * Math.PI * 2;
-            const ridge = new THREE.Mesh(ridgeGeometry, material);
+            const ridge = new THREE.Mesh(ridgeBox, material);
             ridge.position.set(
                 Math.cos(angle) * ridgeRadius,
-                ridgeGeometry.parameters.height / 2,
+                pieceHeight / 2,
                 Math.sin(angle) * ridgeRadius
             );
             ridge.rotation.y = angle;
             pieceGroup.add(ridge);
         }
-
-        const midBowl = new THREE.Mesh(midBowlGeometry, material);
-        midBowl.rotation.x = -Math.PI / 2;
-        midBowl.position.y = baseHeight + midDepth / 2;
-        pieceGroup.add(midBowl);
-
-        const innerDish = new THREE.Mesh(innerDishGeometry, material);
-        innerDish.rotation.x = -Math.PI / 2;
-        innerDish.position.y = baseHeight + innerDishDepth / 2;
-        pieceGroup.add(innerDish);
-
-        const topPlate = new THREE.Mesh(topPlateGeometry, material);
-        topPlate.position.y = baseHeight + midDepth + topHeight / 2;
-        pieceGroup.add(topPlate);
-
-        for (let i = 0; i < topRidgeCount; i++) {
-            const angle = (i / topRidgeCount) * Math.PI * 2;
-            const ridge = new THREE.Mesh(topRidgeGeometry, material);
-            ridge.position.set(
-                Math.cos(angle) * topRidgeRadius,
-                baseHeight + midDepth + topHeight / 2,
-                Math.sin(angle) * topRidgeRadius
-            );
-            ridge.rotation.y = angle;
-            pieceGroup.add(ridge);
+    
+        // Add a single decorative Torus ring in a slight inset on the top surface
+        const topRing = new THREE.Mesh(
+            new THREE.TorusGeometry(ridgeRadius * 0.7, squareSize * 0.015, 16, 64),
+            material
+        );
+        topRing.rotation.x = Math.PI / 2;
+        topRing.position.y = pieceHeight; // Sit it on the top face
+        pieceGroup.add(topRing);
+    
+        // --- King's Crown Group (Same as before, just re-positioned) ---
+        const crownGroup = new THREE.Group();
+        const crownMaterial = new THREE.MeshStandardMaterial({ color: 0xffd700, emissive: 0x333300, roughness: 0.3, metalness: 0.7 });
+        const kingBase = new THREE.Mesh(kingBaseCylinder, crownMaterial);
+        kingBase.position.y = crownHeight * 0.3;
+        crownGroup.add(kingBase);
+        const kingRing = new THREE.Mesh(kingCrownTorus, crownMaterial);
+        kingRing.rotation.x = Math.PI / 2;
+        kingRing.position.y = crownHeight * 0.7;
+        crownGroup.add(kingRing);
+        for (let i = 0; i < kingSpikeCount; i++) {
+            const angle = (i / kingSpikeCount) * Math.PI * 2;
+            const spike = new THREE.Mesh(kingSpike, crownMaterial);
+            spike.position.set(Math.cos(angle) * kingSpikeRadius, crownHeight * 0.8, Math.sin(angle) * kingSpikeRadius);
+            crownGroup.add(spike);
         }
-
-        const topButton = new THREE.Mesh(topButtonGeometry, material);
-        topButton.position.y = baseHeight + midDepth + topHeight + squareSize * 0.0175;
-        pieceGroup.add(topButton);
-
-        const crownMaterial = new THREE.MeshStandardMaterial({ color: 0xffd700, emissive: 0x333300 });
-        const crown = new THREE.Mesh(crownGeometry, crownMaterial);
-        crown.position.y = baseHeight + midDepth + topHeight + squareSize * 0.085;
-        crown.rotation.x = Math.PI / 2;
-        crown.visible = false;
-        pieceGroup.add(crown);
-        pieceGroup.userData.crown = crown;
-
-        pieceGroup.userData.height = baseHeight + midDepth + topHeight + squareSize * 0.035;
+        
+        // Position the whole crown on top of the checker piece
+        crownGroup.position.y = pieceHeight;
+        crownGroup.visible = false;
+        pieceGroup.add(crownGroup);
+        pieceGroup.userData.crown = crownGroup;
+    
+        // Set the height for positioning on the board
+        pieceGroup.userData.height = pieceHeight;
         return pieceGroup;
     }
-
     function createMoveMarkers(markerMeshes) {
         const boardSize = 8;
         const squareCount = 8;
@@ -461,6 +393,12 @@ window.addEventListener('load', () => {
         controls.target.set(0, 0, 0);
         controls.enablePan = false;
         controls.maxPolarAngle = Math.PI / 2 - 0.1;
+        let isCameraAnimating = false;
+
+        controls.addEventListener('start', () => {
+            isCameraAnimating = false;
+        });
+
         controls.update();
 
         const floor = createFloor();
@@ -615,6 +553,7 @@ window.addEventListener('load', () => {
                     if (previousPlayer !== game.currentPlayer) {
                         targetCameraPosition.copy(switchCameraToCurrentPlayer());
                         previousPlayer = game.currentPlayer;
+                        isCameraAnimating = true;
                     }
 
                     if (game.selectedPiece) {
@@ -643,7 +582,15 @@ window.addEventListener('load', () => {
 
         function animate() {
             requestAnimationFrame(animate);
-            camera.position.lerp(targetCameraPosition, 0.05);
+            if (isCameraAnimating) {
+                camera.position.lerp(targetCameraPosition, 0.05);
+        
+                // Stop animating when the camera is very close to the target
+                if (camera.position.distanceTo(targetCameraPosition) < 0.01) {
+                    isCameraAnimating = false;
+                }
+            }
+  
             controls.update();
 
             renderer.clear();
